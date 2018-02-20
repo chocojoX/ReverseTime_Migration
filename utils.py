@@ -13,6 +13,12 @@ def create_circular_transducers(N, R0):
     return pos
 
 
+def create_linear_transducers(N, R0):
+    pos = np.zeros((N, N))
+    pos[:, 0] = np.linspace(-R0, R0, N)
+    return pos
+
+
 def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, size=524, limits=10):
     #TODO Test this function
     # Creating background
