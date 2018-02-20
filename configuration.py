@@ -22,3 +22,17 @@ class Configuration(object):
                 self.dataset[i, j] = G_hat
                 self.dataset[j, i] = G_hat
         pass
+
+
+    def RT_Imaging(self):
+        # TODO implement the RT imaging from self.dataset
+        pass
+
+
+    def KM_Imaging(self):
+        # TODO implement the RT imaging from self.dataset
+        pass
+
+
+    def theoretical_Imaging(self):
+        # TODO Do the theoretical imaging using the first Bessale function
