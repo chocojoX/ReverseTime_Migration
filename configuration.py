@@ -4,8 +4,14 @@ from utils import *
 
 
 class Configuration(object):
-    def __init__(self, N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1):
-        self.transducer_pos = create_circular_transducers(N, R0)
+    def __init__(self, N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular"):
+        if config=="circular":
+            self.transducer_pos = create_circular_transducers(N, R0)
+        elif config== "linear":
+            self.transducer_pos = create_linear_transducers(N, R0)
+        else:
+            print("Config '%s' not yet implemented, please, try either 'circular' or 'linear'" %sconfig)
+
         self.N = N            # Number of transducers
         self.R0 = R0          # Scale of the transducers repartition
         self.reflector_pos = reflector_pos   # Matrix of position of the transducers
@@ -21,7 +27,7 @@ class Configuration(object):
                               # All frequencies to be simulated
 
 
-    def generate_dataset(self, omega):
+    def generate_dataset(self):
         # TODO To be tested
         self.dataset = np.zeros((self.N, self.N, self.n_freq))
         for i in range(self.N):
@@ -47,3 +53,10 @@ class Configuration(object):
 
     def theoretical_Imaging(self):
         # TODO Do the theoretical imaging using the first Bessale function
+
+
+
+if __name__=="__main__":
+    conf = Configuration(N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular")
+    conf.generate_dataset()
+    conf.RT_Imaging()
