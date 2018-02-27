@@ -1,5 +1,5 @@
 import numpy as np
-# import cv2
+import cv2
 
 # File created for all utility functions or classes
 
@@ -19,8 +19,13 @@ def create_linear_transducers(N, R0):
     return pos
 
 
-def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, size=524, limits=10):
-    #TODO Test this function
+def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, size=524, limits=5):
+    """
+    Plots the configuration. All arguments are optional, the function will plot all given arguments on the same figure
+    inputs :
+    - size : size (in pixels) of the image to show
+    - limits : coordinates limits of the domain to show
+    """
     # Creating background
     if pressure is None:
         # Background is dark grey
@@ -32,7 +37,7 @@ def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, size=524
     # Creating tranducers
     if transducer_pos is not None:
         for i in range(transducer_pos.shape[0]):
-            pt = (size/limits*transducer_pos[i, 0], size/limits*transducer_pos[i, 1])
+            pt = (int(size/(2*limits)*transducer_pos[i, 0]+size/2), int(size/(2*limits)*transducer_pos[i, 1]+size/2))
             cv2.circle(background, pt, 3, (15,15,255), 3)
 
     if reflector_pos is not None:
@@ -78,8 +83,9 @@ def compute_born_approx(omega, x1, x2, reflector_pos, c0=1) :
 
 
 if __name__=="__main__":
-    ## This part i for testing only
+    ## This part is for testing only
     transducer_pos = create_circular_transducers(N=20, R0=2)
-    import matplotlib.pyplot as plt
-    plt.scatter(transducer_pos[:, 0], transducer_pos[:, 1])
-    plt.show()
+    plot_config(transducer_pos)
+    # import matplotlib.pyplot as plt
+    # plt.scatter(transducer_pos[:, 0], transducer_pos[:, 1])
+    # plt.show()
