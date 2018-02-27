@@ -34,14 +34,17 @@ def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, size=524
         # TODO Background should be of the color of the pressure field
         pass
 
-    # Creating tranducers
+    # Creating tranducers and plotting them as red circles
     if transducer_pos is not None:
         for i in range(transducer_pos.shape[0]):
             pt = (int(size/(2*limits)*transducer_pos[i, 0]+size/2), int(size/(2*limits)*transducer_pos[i, 1]+size/2))
             cv2.circle(background, pt, 3, (15,15,255), 3)
 
+    # Adding Reflectors as blue circles
     if reflector_pos is not None:
-        #TODO add reflecter
+        for pos in reflector_pos:
+             pt = (int(size/(2*limits)*pos[0]+size/2), int(size/(2*limits)*pos[1]+size/2))
+             cv2.circle(background, pt, 3, (255,15,15), 3)
         pass
 
     cv2.imshow("configuration", background)
@@ -85,7 +88,7 @@ def compute_born_approx(omega, x1, x2, reflector_pos, c0=1) :
 if __name__=="__main__":
     ## This part is for testing only
     transducer_pos = create_circular_transducers(N=20, R0=2)
-    plot_config(transducer_pos)
+    plot_config(transducer_pos, reflector_pos = [(0.1,0.2)])
     # import matplotlib.pyplot as plt
     # plt.scatter(transducer_pos[:, 0], transducer_pos[:, 1])
     # plt.show()
