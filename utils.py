@@ -73,11 +73,15 @@ def J0(s):
 
 def Y0(s):
     """ Returns the value of the bessel funciton of the first kind in s """
+    if s==0:
+        s=0.0000001   # Y0(0)=-inf
     return sp.y0(s)
 
 
 def H0(s):
     """ Computes and returns the value of the Hankel function in s """
+    if s==0:
+        s = 0.0000001   #H0(0) = -inf
     value = sp.hankel1(0, s)
     # theoretical_value = J0(s) + 1j*Y0(s)
     return value
@@ -98,7 +102,6 @@ def compute_born_approx(omega, x1, x2, reflector_pos, c0=1) :
      positions x1 and x2 with a (unique for now) reflector at reflector_pos.
      The wave velocity is denoted c0
     """
-    # TODO To be tested
     G_hat = G0_hat(omega, x1, x2) + (omega/c0)**2*G0_hat(omega, x1, reflector_pos)*G0_hat(omega, x1, reflector_pos)
     return G_hat
 
