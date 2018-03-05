@@ -20,36 +20,45 @@ def create_linear_transducers(N, R0):
     return pos
 
 
-def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, size=524, limits=5):
+def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, n_pixels=524, limits=5, message = "configuration"):
     """
     Plots the configuration. All arguments are optional, the function will plot all given arguments on the same figure
     inputs :
-    - size : size (in pixels) of the image to show
+    - n_pixels : size (in pixels) of the image to show
     - limits : coordinates limits of the domain to show
     """
     # Creating background
     if pressure is None:
         # Background is dark grey
-        background = (15*np.ones((size, size, 3))).astype("uint8")
+        background = (15*np.ones((n_pixels, n_pixels, 3))).astype("uint8")
     else:
-        # TODO Background should be of the color of the pressure field
-        pass
+        background = cv2.applyColorMap(pressure, cv2.COLORMAP_JET)
 
+    precision_step = 2*limits/n_pixels
     # Creating tranducers and plotting them as red circles
     if transducer_pos is not None:
         for i in range(transducer_pos.shape[0]):
-            pt = (int(size/(2*limits)*transducer_pos[i, 0]+size/2), int(size/(2*limits)*transducer_pos[i, 1]+size/2))
-            cv2.circle(background, pt, 3, (15,15,255), 3)
+            pt = (int(n_pixels/(2*limits)*transducer_pos[i, 0]+n_pixels/2), int(n_pixels/(2*limits)*transducer_pos[i, 1]+n_pixels/2))
+            # import pdb; pdb.set_trace()
+            cv2.circle(background, pt, 1, (15,15,255), 1)
 
     # Adding Reflectors as blue circles
     if reflector_pos is not None:
         for pos in reflector_pos:
-             pt = (int(size/(2*limits)*pos[0]+size/2), int(size/(2*limits)*pos[1]+size/2))
-             cv2.circle(background, pt, 3, (255,15,15), 3)
-        pass
+             pt = (int(n_pixels/(2*limits)*pos[0]+n_pixels/2), int(n_pixels/(2*limits)*pos[1]+n_pixels/2))
+             cv2.circle(background, pt, 1, (15,255,15), 1)
 
-    cv2.imshow("configuration", background)
+    cv2.imshow(message, background)
     cv2.waitKey(0)
+
+
+def create_mesh(size, precision):
+    n = int(size/precision)
+    x = np.arange(-n, n)
+    X, Y = np.meshgrid(x, x)
+    X = X * size/n
+    Y = Y * size/n
+    return X, Y
 
 
 def dist(x, y):
@@ -80,7 +89,7 @@ def G0_hat(omega, x, y):
         With H0 is the Hankel function (H0 = J0 + i * Y0 with J0 first Bessel function and Y0 second Bessel function)
     """
     # TODO To be tested
-    G0 = 1j/4.*H0(omega*dist(x, y))
+    G0 = 0.25j*H0(omega*dist(x, y))
     return G0
 
 

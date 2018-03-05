@@ -4,13 +4,17 @@ from utils import *
 
 
 class Configuration(object):
-    def __init__(self, N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular"):
+    def __init__(self, N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", precision_step=1., representation_size=200):
         if config=="circular":
             self.transducer_pos = create_circular_transducers(N, R0)
         elif config== "linear":
             self.transducer_pos = create_linear_transducers(N, R0)
         else:
             print("Config '%s' not yet implemented, please, try either 'circular' or 'linear'" %sconfig)
+
+        self.precision_step = precision_step    # Step between two pixels where the values of the imaging are computed
+        self.representation_size = representation_size   # Size of Omega (which is a square)
+        self.n_pixels = int(2*representation_size/precision_step + 1)
 
         self.N = N            # Number of transducers
         self.R0 = R0          # Scale of the transducers repartition
@@ -35,10 +39,11 @@ class Configuration(object):
                 # We only need to compute half of them since the dataset is symmetric
                 x1 = self.transducer_pos[i, :]
                 x2 = self.transducer_pos[j, :]
-                for omega in self.frequencies:
-                    G_hat = compute_born_approx(omega, x1, x2, xelf.reflector_pos)
-                    self.dataset[i, j, omega] = G_hat
-                    self.dataset[j, i, omega] = G_hat
+                for o, omega in enumerate(self.frequencies):
+                    G_hat = compute_born_approx(omega, x1, x2, self.reflector_pos)
+                    # TODO Debug : G_hat is NAN for the moment
+                    self.dataset[i, j, o] = G_hat
+                    self.dataset[j, i, o] = G_hat
 
 
     def RT_Imaging(self):
@@ -51,12 +56,22 @@ class Configuration(object):
         pass
 
 
-    def theoretical_Imaging(self):
-        # TODO Do the theoretical imaging using the first Bessale function
+    def theoretical_Imaging(self, omega, show=True):
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        im = np.sqrt((X - self.reflector_pos[0])**2 + (Y - self.reflector_pos[1])**2)
+        im = J0(omega*im)**2
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        if show:
+            message = "Theoretical imaging"
+            im = (255*im).astype("uint8")
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return im
+
 
 
 
 if __name__=="__main__":
-    conf = Configuration(N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular")
+    conf = Configuration(N=100, R0=90, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", representation_size=100, precision_step=0.5)
+    conf.theoretical_Imaging(1)
     conf.generate_dataset()
     conf.RT_Imaging()
