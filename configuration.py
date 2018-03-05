@@ -73,6 +73,6 @@ class Configuration(object):
 
 if __name__=="__main__":
     conf = Configuration(N=100, R0=90, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", representation_size=100, precision_step=0.5)
-    # conf.theoretical_Imaging(1)
+    conf.theoretical_Imaging(1)
     conf.generate_dataset()
     conf.RT_Imaging()
