@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import scipy.special as sp
 
 # File created for all utility functions or classes
 
@@ -53,15 +54,24 @@ def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, size=524
 
 def dist(x, y):
     """ Returns the euclidean distance betwwen two tuples or lists of length 2"""
-    #TODO To be tested
     return np.sqrt((x[0]-y[0])**2+(x[1]-y[1])**2)
+
+
+def J0(s):
+    """ Returns the value of Bessel function of the first kind """
+    return sp.j0(s)
+
+
+def Y0(s):
+    """ Returns the value of the bessel funciton of the first kind in s """
+    return sp.y0(s)
 
 
 def H0(s):
     """ Computes and returns the value of the Hankel function in s """
-    #TODO implement it7
-    #TODO To be tested
-    pass
+    value = sp.hankel1(0, s)
+    # theoretical_value = J0(s) + 1j*Y0(s)
+    return value
 
 
 def G0_hat(omega, x, y):
@@ -87,6 +97,7 @@ def compute_born_approx(omega, x1, x2, reflector_pos, c0=1) :
 
 if __name__=="__main__":
     ## This part is for testing only
+    H0(3)
     transducer_pos = create_circular_transducers(N=20, R0=2)
     plot_config(transducer_pos, reflector_pos = [(0.1,0.2)])
     # import matplotlib.pyplot as plt
