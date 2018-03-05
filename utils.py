@@ -97,12 +97,17 @@ def G0_hat(omega, x, y):
     return G0
 
 
-def compute_born_approx(omega, x1, x2, reflector_pos, c0=1) :
+def compute_born_approx(omega, x1, x2, reflector_pos, c0=1, include_direct_path=True) :
     """ Computes and returns the Born approximation of G_hat at frequency omega between two transducers at
      positions x1 and x2 with a (unique for now) reflector at reflector_pos.
      The wave velocity is denoted c0
     """
-    G_hat = G0_hat(omega, x1, x2) + (omega/c0)**2*G0_hat(omega, x1, reflector_pos)*G0_hat(omega, x1, reflector_pos)
+    if include_direct_path:
+        # Include G0(x1,x2) in the computation
+        G_hat = G0_hat(omega, x1, x2) + (omega/c0)**2*G0_hat(omega, x1, reflector_pos)*G0_hat(omega, x1, reflector_pos)
+    else:
+        # Delete the direct signal (signal without bouncing on the reflector)
+        G_hat = (omega/c0)**2*G0_hat(omega, x1, reflector_pos)*G0_hat(omega, x1, reflector_pos)
     return G_hat
 
 

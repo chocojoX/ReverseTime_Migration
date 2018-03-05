@@ -39,7 +39,7 @@ class Configuration(object):
                 x1 = self.transducer_pos[i, :]
                 x2 = self.transducer_pos[j, :]
                 for o, omega in enumerate(self.frequencies):
-                    G_hat = compute_born_approx(omega, x1, x2, self.reflector_pos)
+                    G_hat = compute_born_approx(omega, x1, x2, self.reflector_pos, include_direct_path=False)
                     self.dataset[i, j, o] = G_hat
                     self.dataset[j, i, o] = G_hat
 
