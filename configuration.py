@@ -32,8 +32,9 @@ class Configuration(object):
 
 
     def generate_dataset(self):
-        # TODO To be tested
-        self.dataset = np.zeros((self.N, self.N, self.n_freq))
+        # TODO Python matrices can't naturally handle complex numbers.
+        # We need to adapt somehow
+        self.dataset = np.zeros((self.N, self.N, self.n_freq), "complex")
         for i in range(self.N):
             for j in range(i, self.N):
                 # We only need to compute half of them since the dataset is symmetric
@@ -72,6 +73,6 @@ class Configuration(object):
 
 if __name__=="__main__":
     conf = Configuration(N=100, R0=90, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", representation_size=100, precision_step=0.5)
-    conf.theoretical_Imaging(1)
+    # conf.theoretical_Imaging(1)
     conf.generate_dataset()
     conf.RT_Imaging()
