@@ -32,8 +32,6 @@ class Configuration(object):
 
 
     def generate_dataset(self):
-        # TODO Python matrices can't naturally handle complex numbers.
-        # We need to adapt somehow
         self.dataset = np.zeros((self.N, self.N, self.n_freq), "complex")
         for i in range(self.N):
             for j in range(i, self.N):
@@ -42,7 +40,6 @@ class Configuration(object):
                 x2 = self.transducer_pos[j, :]
                 for o, omega in enumerate(self.frequencies):
                     G_hat = compute_born_approx(omega, x1, x2, self.reflector_pos)
-                    # TODO Debug : G_hat is NAN for the moment
                     self.dataset[i, j, o] = G_hat
                     self.dataset[j, i, o] = G_hat
 
