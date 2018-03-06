@@ -52,7 +52,6 @@ class Configuration(object):
         for o, omega in enumerate([self.omega]):     # TODO : change this to handle multiple frequencies
             G = [np.zeros_like(X, "complex") for s in range(self.N)]
             for i in range(self.n_pixels):
-                print(i)
                 for j in range(self.n_pixels):
                     x, y = (X[i, j], Y[i, j])
                     for s in range(self.N):
@@ -64,7 +63,6 @@ class Configuration(object):
         for s in range(self.N):
             for r in range(self.N):
                 us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
-        # import pdb; pdb.set_trace()
 
         print("Computing the result")
         background = np.zeros_like(X, "complex")
