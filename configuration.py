@@ -46,8 +46,35 @@ class Configuration(object):
 
     def RT_Imaging(self):
         # TODO implement the RT imaging from self.dataset
-        pass
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        self.n_pixels = X.shape[0]
+        print("Solving the 2N equations")
+        for o, omega in enumerate([self.omega]):     # TODO : change this to handle multiple frequencies
+            G = [np.zeros_like(X, "complex") for s in range(self.N)]
+            for i in range(self.n_pixels):
+                print(i)
+                for j in range(self.n_pixels):
+                    x, y = (X[i, j], Y[i, j])
+                    for s in range(self.N):
+                        sx, sy = self.transducer_pos[s]
+                        G[s][i, j] = G0_hat(omega, (sx, sy), (x, y))
 
+        print("Creating us_tilda_hat")
+        us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
+        for s in range(self.N):
+            for r in range(self.N):
+                us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
+        # import pdb; pdb.set_trace()
+
+        print("Computing the result")
+        background = np.zeros_like(X, "complex")
+        for s in range(self.N):
+            background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+        im = np.abs(background)
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        im = (255*im).astype("uint8")
+        message = "Imagerie par retournement temporel"
+        plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
 
     def KM_Imaging(self):
         # TODO implement the RT imaging from self.dataset
@@ -69,7 +96,7 @@ class Configuration(object):
 
 
 if __name__=="__main__":
-    conf = Configuration(N=100, R0=90, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", representation_size=100, precision_step=0.5)
-    conf.theoretical_Imaging(1)
+    conf = Configuration(N=100, R0=101., reflector_pos=(10, 20), omega=0.05*2*np.pi, B=0, n_freq=1, config="circular", representation_size=110., precision_step=1)
+    conf.theoretical_Imaging(0.05*2*np.pi)
     conf.generate_dataset()
     conf.RT_Imaging()

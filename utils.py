@@ -48,13 +48,15 @@ def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, n_pixels
              pt = (int(n_pixels/(2*limits)*pos[0]+n_pixels/2), int(n_pixels/(2*limits)*pos[1]+n_pixels/2))
              cv2.circle(background, pt, 1, (15,255,15), 1)
 
+    if background.shape[0]<500:
+        background = cv2.resize(background, (500,500))
     cv2.imshow(message, background)
     cv2.waitKey(0)
 
 
 def create_mesh(size, precision):
     n = int(size/precision)
-    x = np.arange(-n, n)
+    x = np.arange(-n, n+1)
     X, Y = np.meshgrid(x, x)
     X = X * size/n
     Y = Y * size/n
@@ -73,15 +75,15 @@ def J0(s):
 
 def Y0(s):
     """ Returns the value of the bessel funciton of the first kind in s """
-    if s==0:
-        s=0.0000001   # Y0(0)=-inf
+    if s<0.001:
+        s=0.001   # Y0(0)=-inf
     return sp.y0(s)
 
 
 def H0(s):
     """ Computes and returns the value of the Hankel function in s """
-    if s==0:
-        s = 0.0000001   #H0(0) = -inf
+    if s<0.001:
+        s = 0.001   #H0(0) = -inf
     value = sp.hankel1(0, s)
     # theoretical_value = J0(s) + 1j*Y0(s)
     return value
@@ -107,7 +109,7 @@ def compute_born_approx(omega, x1, x2, reflector_pos, c0=1, include_direct_path=
         G_hat = G0_hat(omega, x1, x2) + (omega/c0)**2*G0_hat(omega, x1, reflector_pos)*G0_hat(omega, x1, reflector_pos)
     else:
         # Delete the direct signal (signal without bouncing on the reflector)
-        G_hat = (omega/c0)**2*G0_hat(omega, x1, reflector_pos)*G0_hat(omega, x1, reflector_pos)
+        G_hat = (omega/c0)**2 * G0_hat(omega, x1, reflector_pos)*G0_hat(omega, x2, reflector_pos)
     return G_hat
 
 
