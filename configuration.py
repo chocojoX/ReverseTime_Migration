@@ -5,6 +5,7 @@ from utils import *
 
 class Configuration(object):
     def __init__(self, N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", precision_step=1., representation_size=200):
+        self.config=config
         if config=="circular":
             self.transducer_pos = create_circular_transducers(N, R0)
         elif config== "linear":
@@ -45,29 +46,48 @@ class Configuration(object):
                     self.dataset[j, i, o] = G_hat
 
 
+    def filter_imaging(self, background, X, Y):
+        background = np.abs(background)
+        """ Takes the imaging as input and deletes detection too close to the transduers """
+        for i in range(X.shape[0]):
+            for j in range(Y.shape[0]):
+                x, y = (X[i, j], Y[i, j])
+                if self.config=="circular":
+                    if dist((x, y), (0, 0))>=0.95*self.R0:
+                        background[i, j] = background.min()
+                elif self.config == "linear":
+                    if np.abs(Y[i, j])<1.1:
+                        background[i, j] = background.min()
+        return background
+
+
+
     def RT_Imaging(self):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
-        print("Solving the 2N equations")
-        for o, omega in enumerate([self.omega]):     # TODO : change this to handle multiple frequencies
+        background = np.zeros_like(X, "complex")
+        # print("Solving the 2N equations")
+        for o, omega in enumerate(self.frequencies):
             G = [np.zeros_like(X, "complex") for s in range(self.N)]
             for i in range(self.n_pixels):
                 for j in range(self.n_pixels):
                     x, y = (X[i, j], Y[i, j])
                     for s in range(self.N):
                         sx, sy = self.transducer_pos[s]
+                        if dist((x, y), (sx, sy))<0.2:
+                            G[s][i, j] = 0
                         G[s][i, j] = G0_hat(omega, (sx, sy), (x, y))
 
-        print("Creating us_tilda_hat")
-        us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
-        for s in range(self.N):
-            for r in range(self.N):
-                us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
+            # print("Creating us_tilda_hat")
+            us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
+            for s in range(self.N):
+                for r in range(self.N):
+                    us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, o])
 
-        print("Computing the result")
-        background = np.zeros_like(X, "complex")
-        for s in range(self.N):
-            background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+            # print("Computing the result")
+            for s in range(self.N):
+                background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+        background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
         im = (255*im).astype("uint8")
@@ -77,8 +97,9 @@ class Configuration(object):
     def KM_Imaging(self):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
-        print("Solving the 2N equations")
-        for o, omega in enumerate([self.omega]):     # TODO : change this to handle multiple frequencies
+        background = np.zeros_like(X, "complex")
+        # print("Solving the 2N equations")
+        for o, omega in enumerate(self.frequencies):
             G = [np.zeros_like(X, "complex") for s in range(self.N)]
             for i in range(self.n_pixels):
                 for j in range(self.n_pixels):
@@ -87,20 +108,20 @@ class Configuration(object):
                         sx, sy = self.transducer_pos[s]
                         G[s][i, j] = np.exp( (omega*dist((x,y), (sx,sy))/self.c0)*1j)
 
-        print("Creating us_tilda_hat")
-        us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
-        for s in range(self.N):
-            for r in range(self.N):
-                us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
+            # print("Creating us_tilda_hat")
+            us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
+            for s in range(self.N):
+                for r in range(self.N):
+                    us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
 
-        print("Computing the result")
-        background = np.zeros_like(X, "complex")
-        for s in range(self.N):
-            background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+            # print("Computing the result")
+            for s in range(self.N):
+                background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+        background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
         im = (255*im).astype("uint8")
-        message = "Imagerie par retournement temporel"
+        message = "Imagerie KM"
         plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
         return
 
@@ -110,7 +131,7 @@ class Configuration(object):
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X, "complex")
 
-        for o, omega in enumerate([self.omega]):     # TODO : change this to handle multiple frequencies
+        for o, omega in enumerate(self.frequencies):
             eigenvalues, eigenvectors = np.linalg.eig(self.dataset[:,:,o])
             v1 = np.ma.conjugate(eigenvectors[:,0])
 
@@ -124,6 +145,7 @@ class Configuration(object):
 
                     background[i, j] += np.abs(np.dot(g_hat_x, v1))**2
 
+        background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
         im = (255*im).astype("uint8")
@@ -147,7 +169,7 @@ class Configuration(object):
 
 
 if __name__=="__main__":
-    conf = Configuration(N=100, R0=50., reflector_pos=(0, 100), omega=0.05*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
-    # conf.theoretical_Imaging(0.05*2*np.pi)
+    conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.05*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
+    conf.theoretical_Imaging(0.05*2*np.pi)
     conf.generate_dataset()
-    conf.MUSIC_Imaging()
+    conf.RT_Imaging()
