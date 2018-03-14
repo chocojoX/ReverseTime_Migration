@@ -14,6 +14,8 @@ def part3():
     conf.RT_Imaging()
     conf.KM_Imaging()
     conf.NUSIC_Imaging()
+    # TODO Add code for comparing with the theoretical focal spots
+    # For this, we'll need to return the predicted field of values and plot 1D curves
 
 
 if __name__=="__main__":
