@@ -102,7 +102,34 @@ class Configuration(object):
         im = (255*im).astype("uint8")
         message = "Imagerie par retournement temporel"
         plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
-        pass
+        return
+
+
+    def MUSIC_Imaging(self):
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        self.n_pixels = X.shape[0]
+        background = np.zeros_like(X, "complex")
+
+        for o, omega in enumerate([self.omega]):     # TODO : change this to handle multiple frequencies
+            eigenvalues, eigenvectors = np.linalg.eig(self.dataset[:,:,o])
+            v1 = np.ma.conjugate(eigenvectors[:,0])
+
+            for i in range(self.n_pixels):
+                for j in range(self.n_pixels):
+                    x, y = (X[i, j], Y[i, j])
+                    g_hat_x = np.zeros(self.N, "complex")
+                    for s in range(self.N):
+                        sx, sy = self.transducer_pos[s]
+                        g_hat_x[s] = G0_hat(omega, (sx, sy), (x, y))
+
+                    background[i, j] += np.abs(np.dot(g_hat_x, v1))**2
+
+        im = np.abs(background)
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        im = (255*im).astype("uint8")
+        message = "Imagerie MUSIC"
+        plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return
 
 
     def theoretical_Imaging(self, omega, show=True):
@@ -120,7 +147,7 @@ class Configuration(object):
 
 
 if __name__=="__main__":
-    conf = Configuration(N=20, R0=101., reflector_pos=(10, 30), omega=0.05*2*np.pi, B=0, n_freq=1, config="circular", representation_size=110., precision_step=1)
+    conf = Configuration(N=100, R0=50., reflector_pos=(0, 100), omega=0.05*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
     # conf.theoretical_Imaging(0.05*2*np.pi)
     conf.generate_dataset()
-    conf.KM_Imaging()
+    conf.MUSIC_Imaging()
