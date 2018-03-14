@@ -20,6 +20,7 @@ class Configuration(object):
         self.R0 = R0          # Scale of the transducers repartition
         self.reflector_pos = reflector_pos   # Matrix of position of the transducers
 
+        self.c0 = 1           # Wave celerity
         self.omega = omega    # Central frequency to be emitted
         self.B = B            # Width of the broadband (B=0 means the signal is harmonic)
         self.n_freq = n_freq  # Number of frequencies to usein the broadband
@@ -45,7 +46,6 @@ class Configuration(object):
 
 
     def RT_Imaging(self):
-        # TODO implement the RT imaging from self.dataset
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         print("Solving the 2N equations")
@@ -75,7 +75,33 @@ class Configuration(object):
         plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
 
     def KM_Imaging(self):
-        # TODO implement the RT imaging from self.dataset
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        self.n_pixels = X.shape[0]
+        print("Solving the 2N equations")
+        for o, omega in enumerate([self.omega]):     # TODO : change this to handle multiple frequencies
+            G = [np.zeros_like(X, "complex") for s in range(self.N)]
+            for i in range(self.n_pixels):
+                for j in range(self.n_pixels):
+                    x, y = (X[i, j], Y[i, j])
+                    for s in range(self.N):
+                        sx, sy = self.transducer_pos[s]
+                        G[s][i, j] = np.exp( (omega*dist((x,y), (sx,sy))/self.c0)*1j)
+
+        print("Creating us_tilda_hat")
+        us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
+        for s in range(self.N):
+            for r in range(self.N):
+                us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
+
+        print("Computing the result")
+        background = np.zeros_like(X, "complex")
+        for s in range(self.N):
+            background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+        im = np.abs(background)
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        im = (255*im).astype("uint8")
+        message = "Imagerie par retournement temporel"
+        plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
         pass
 
 
@@ -94,7 +120,7 @@ class Configuration(object):
 
 
 if __name__=="__main__":
-    conf = Configuration(N=100, R0=101., reflector_pos=(10, 20), omega=0.05*2*np.pi, B=0, n_freq=1, config="circular", representation_size=110., precision_step=1)
-    conf.theoretical_Imaging(0.05*2*np.pi)
+    conf = Configuration(N=20, R0=101., reflector_pos=(10, 30), omega=0.05*2*np.pi, B=0, n_freq=1, config="circular", representation_size=110., precision_step=1)
+    # conf.theoretical_Imaging(0.05*2*np.pi)
     conf.generate_dataset()
-    conf.RT_Imaging()
+    conf.KM_Imaging()
