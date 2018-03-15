@@ -52,20 +52,19 @@ class Configuration(object):
     def filter_imaging(self, background, X, Y):
         background = np.abs(background)
         """ Takes the imaging as input and deletes detection too close to the transduers """
-        for i in range(X.shape[0]):
-            for j in range(Y.shape[0]):
-                x, y = (X[i, j], Y[i, j])
-                if self.config=="circular":
+        if self.config=="circular":
+            for i in range(X.shape[0]):
+                for j in range(Y.shape[0]):
+                    x, y = (X[i, j], Y[i, j])
                     if dist((x, y), (0, 0))>=0.95*self.R0:
                         background[i, j] = background.min()
-                elif self.config == "linear":
-                    if np.abs(Y[i, j])<1.1:
-                        background[i, j] = background.min()
+        elif self.config == "linear":
+            background[Y<1.1] = background.min()
         return background
 
 
 
-    def RT_Imaging(self):
+    def RT_Imaging(self, show=True):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X, "complex")
@@ -95,9 +94,12 @@ class Configuration(object):
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
         im = (255*im).astype("uint8")
         message = "Imagerie par retournement temporel"
-        plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        if show:
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return background, X, Y
 
-    def KM_Imaging(self):
+
+    def KM_Imaging(self, show=True):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X, "complex")
@@ -125,11 +127,12 @@ class Configuration(object):
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
         im = (255*im).astype("uint8")
         message = "Imagerie KM"
-        plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
-        return
+        if show:
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return background, X, Y
 
 
-    def MUSIC_Imaging(self):
+    def MUSIC_Imaging(self, show=True):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X, "complex")
@@ -153,8 +156,9 @@ class Configuration(object):
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
         im = (255*im).astype("uint8")
         message = "Imagerie MUSIC"
-        plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
-        return
+        if show:
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return background, X, Y
 
 
     def theoretical_Imaging(self, omega, show=True):
@@ -169,10 +173,23 @@ class Configuration(object):
         return im
 
 
+    def get_estimated_reflector(self, background, X, Y):
+        x, y = np.unravel_index(background.argmax(), background.shape)
+        x, y = (X[x, y], Y[x, y])
+        return x, y
+
+
+    def get_estimation_error(self, background, X, Y):
+        x, y = self.get_estimated_reflector(background, X, Y)
+        return dist((x, y), (self.reflector_pos))
+
+
+
 
 
 if __name__=="__main__":
     conf = Configuration(N=20, R0=100., reflector_pos=(20, 20), omega=0.04*2*np.pi, B=0.004*2*np.pi, n_freq=3, config="circular", representation_size=110., precision_step=1, noise_level=0.001)
     # conf.theoretical_Imaging(0.05*2*np.pi)
     conf.generate_dataset()
-    conf.RT_Imaging()
+    bg, X, Y = conf.RT_Imaging(show=False)
+    print(conf.get_estimation_error(bg, X, Y))
