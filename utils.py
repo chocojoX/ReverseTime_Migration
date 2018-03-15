@@ -75,15 +75,15 @@ def J0(s):
 
 def Y0(s):
     """ Returns the value of the bessel funciton of the first kind in s """
-    if s<0.1:
-        s=0.1   # Y0(0)=-inf
+    if s<0.001:
+        s=0.001   # Y0(0)=-inf
     return sp.y0(s)
 
 
 def H0(s):
     """ Computes and returns the value of the Hankel function in s """
-    if s<0.1:
-        s = 0.1   #H0(0) = -inf
+    if s<0.01:
+        s = 0.01   #H0(0) = -inf
     value = sp.hankel1(0, s)
     # theoretical_value = J0(s) + 1j*Y0(s)
     return value

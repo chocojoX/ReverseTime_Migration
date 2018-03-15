@@ -4,7 +4,7 @@ from utils import *
 
 
 class Configuration(object):
-    def __init__(self, N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", precision_step=1., representation_size=200):
+    def __init__(self, N=100, R0=100, reflector_pos=(10,20), omega=2*np.pi, B=0, n_freq=1, config="circular", precision_step=1., representation_size=200, noise_level=0):
         self.config=config
         if config=="circular":
             self.transducer_pos = create_circular_transducers(N, R0)
@@ -25,6 +25,7 @@ class Configuration(object):
         self.omega = omega    # Central frequency to be emitted
         self.B = B            # Width of the broadband (B=0 means the signal is harmonic)
         self.n_freq = n_freq  # Number of frequencies to usein the broadband
+        self.sigma = noise_level
         if self.B == 0:
             # If the signal is harmonic, only consider one frequency (this line should not be called, its role is mainly to anticipate bugs)
             self.n_freq = 1
@@ -44,6 +45,8 @@ class Configuration(object):
                     G_hat = compute_born_approx(omega, x1, x2, self.reflector_pos, include_direct_path=False)
                     self.dataset[i, j, o] = G_hat
                     self.dataset[j, i, o] = G_hat
+        noise = 0.5 * self.sigma * (np.random.randn(self.N, self.N, self.n_freq) + np.random.randn(self.N, self.N, self.n_freq)*1j)
+        self.dataset = self.dataset+noise
 
 
     def filter_imaging(self, background, X, Y):
@@ -86,7 +89,7 @@ class Configuration(object):
 
             # print("Computing the result")
             for s in range(self.N):
-                background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+                background = background + us_tilda_hat[s] * G[s]
         background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
@@ -116,7 +119,7 @@ class Configuration(object):
 
             # print("Computing the result")
             for s in range(self.N):
-                background = background + np.ma.conjugate(us_tilda_hat[s]) * G[s]
+                background = background +us_tilda_hat[s] * G[s]
         background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
@@ -169,7 +172,7 @@ class Configuration(object):
 
 
 if __name__=="__main__":
-    conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.05*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
-    conf.theoretical_Imaging(0.05*2*np.pi)
+    conf = Configuration(N=20, R0=100., reflector_pos=(20, 20), omega=0.04*2*np.pi, B=0.004*2*np.pi, n_freq=3, config="circular", representation_size=110., precision_step=1, noise_level=0.001)
+    # conf.theoretical_Imaging(0.05*2*np.pi)
     conf.generate_dataset()
     conf.RT_Imaging()
