@@ -27,6 +27,17 @@ def part4():
     conf.MUSIC_Imaging()
 
 
+def part5():
+    omega = 0.05*2*np.pi
+    B = 0.*omega
+    conf = Configuration(N=20, R0=100., reflector_pos=(20, 20), omega=omega, B=B, n_freq=1, config="circular", representation_size=110., precision_step=1, noise_level=0.0001)
+    # conf.theoretical_Imaging(omega)
+    conf.generate_dataset()
+    bg, X, Y = conf.RT_Imaging(show=True)
+    print("Localisation error : %.1f" %conf.get_estimation_error(bg, X, Y))
+
+
+
 
 if __name__=="__main__":
     print("Launching Part2")
@@ -37,3 +48,6 @@ if __name__=="__main__":
 
     print("Launching Part4")
     part4()
+
+    print("Launching Part5")
+    part5()
