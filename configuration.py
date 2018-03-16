@@ -188,8 +188,8 @@ class Configuration(object):
 
 
 if __name__=="__main__":
-    conf = Configuration(N=20, R0=100., reflector_pos=(20, 20), omega=0.04*2*np.pi, B=0.004*2*np.pi, n_freq=3, config="circular", representation_size=110., precision_step=1, noise_level=0.001)
+    conf = Configuration(N=20, R0=100., reflector_pos=(20, 20), omega=0.05*2*np.pi, B=0.005*2*np.pi, n_freq=10, config="circular", representation_size=110., precision_step=1, noise_level=0.001)
     # conf.theoretical_Imaging(0.05*2*np.pi)
     conf.generate_dataset()
-    bg, X, Y = conf.RT_Imaging(show=False)
+    bg, X, Y = conf.RT_Imaging(show=True)
     print(conf.get_estimation_error(bg, X, Y))
