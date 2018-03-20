@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from utils import *
 
 
@@ -89,6 +90,7 @@ class Configuration(object):
             # print("Computing the result")
             for s in range(self.N):
                 background = background + us_tilda_hat[s] * G[s]
+        background_complex = background
         background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
@@ -96,7 +98,7 @@ class Configuration(object):
         message = "Imagerie par retournement temporel"
         if show:
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
-        return background, X, Y
+        return background, X, Y, background_complex
 
 
     def KM_Imaging(self, show=True):
@@ -117,7 +119,7 @@ class Configuration(object):
             us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
             for s in range(self.N):
                 for r in range(self.N):
-                    us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
+                    us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, o])
 
             # print("Computing the result")
             for s in range(self.N):
@@ -150,7 +152,7 @@ class Configuration(object):
                         g_hat_x[s] = G0_hat(omega, (sx, sy), (x, y))
 
                     background[i, j] += np.abs(np.dot(g_hat_x, v1))**2
-
+        
         background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
@@ -171,8 +173,46 @@ class Configuration(object):
             im = (255*im).astype("uint8")
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
         return im
+    
+    def theo_func_part3_x(self, omega, show=True) :
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        reflector_pos = self.reflector_pos
+        reflector_dist = math.sqrt(reflector_pos[0]**2 + reflector_pos[1]**2)
+        x = [(X[0,j], reflector_pos[1]) for j in range(X.shape[1])]
+        rc = (2*math.pi/omega) * (reflector_dist / self.R0)
+        dist_to_reflector =  np.array([abs(y[0]- reflector_pos[0]) for y in x])  # notice that they have the same first coord 
+        func = np.sinc(math.pi*dist_to_reflector/ rc)**2
+        if show:
+            plt.plot(func)
+        return func
 
-
+    def theo_spot_part3_x(self, omega):
+        reflector_pos = self.reflector_pos
+        reflector_dist = math.sqrt(reflector_pos[0]**2 + reflector_pos[1]**2)
+        rc = (2*math.pi/omega) * (reflector_dist / self.R0)
+        return rc  # this is the width of the spot
+    
+    def exp_spot_part3_x(self, omega, background, X, Y):
+        i, j = np.unravel_index(background.argmax(), background.shape)
+        x, y = (X[i, j], Y[i, j])
+        background_x_direction = background[i,:]
+        m = background_x_direction[j]
+        #plt.plot(background_x_direction)
+        #print(m)
+        for k in range(j-1,0,-1):
+            #print(background_x_direction[k])
+            if background_x_direction[k] < m:
+                m = background_x_direction[k]
+            else :
+                min_ind = k
+                break
+        try : 
+            x_min = X[i,min_ind]
+        except :
+            x_min = X[i, j-1]
+        return abs(x-x_min)
+            
+    
     def get_estimated_reflector(self, background, X, Y):
         x, y = np.unravel_index(background.argmax(), background.shape)
         x, y = (X[x, y], Y[x, y])
