@@ -172,6 +172,62 @@ class Configuration(object):
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return im
 
+    def theoretical_Imaging_part3(self, omega, show=True):
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        self.n_pixels = X.shape[0]
+        background = np.zeros_like(X)
+        for i in range(self.n_pixels):
+            for j in range(self.n_pixels):
+                x, y = (X[i, j], Y[i, j])
+                background[i,j] = theoretical_2D_func_part3((x,y), omega, self.reflector_pos, self.R0)
+        background = self.filter_imaging(background, X, Y)
+        im = np.abs(background)
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        im = (255*im).astype("uint8")
+        message = "Imagerie theorique"
+        if show:
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return background, X, Y
+
+
+    def theo_func_part3_x(self, omega, show=True) :
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        reflector_pos = self.reflector_pos
+        reflector_dist = dist(reflector_pos, (0,0))
+        x = [(X[0,j], reflector_pos[1]) for j in range(X.shape[1])]
+        rc = (2*math.pi/omega) * (reflector_dist / (2*self.R0))
+        dist_to_reflector =  np.array([abs(y[0]- reflector_pos[0]) for y in x])  # notice that they have the same first coord
+        func = np.sinc(math.pi*dist_to_reflector/ rc)**2
+        if show:
+            plt.plot(func)
+        return func
+
+    def theo_spot_part3_x(self, omega):
+        reflector_pos = self.reflector_pos
+        reflector_dist = dist(reflector_pos, (0,0))
+        rc = (2*math.pi/omega) * (reflector_dist / (2*self.R0))
+        return rc  # this is the width of the spot
+
+    def exp_spot_part3_x(self, omega, background, X, Y):
+        i, j = np.unravel_index(background.argmax(), background.shape)
+        x, y = (X[i, j], Y[i, j])
+        background_x_direction = background[i,:]
+        m = background_x_direction[j]
+        #plt.plot(background_x_direction)
+        #print(m)
+        for k in range(j-1,0,-1):
+            #print(background_x_direction[k])
+            if background_x_direction[k] < m:
+                m = background_x_direction[k]
+            else :
+                min_ind = k
+                break
+        try :
+            x_min = X[i,min_ind]
+        except :
+            x_min = X[i, j-1]
+        return abs(x-x_min)
+
 
     def get_estimated_reflector(self, background, X, Y):
         x, y = np.unravel_index(background.argmax(), background.shape)
