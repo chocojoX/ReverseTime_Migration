@@ -1,5 +1,4 @@
 import numpy as np
-import math
 from utils import *
 
 
@@ -65,7 +64,7 @@ class Configuration(object):
 
 
 
-    def RT_Imaging(self, show=True):
+    def RT_Imaging(self, show=True, save=None):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X, "complex")
@@ -96,11 +95,11 @@ class Configuration(object):
         im = (255*im).astype("uint8")
         message = "Imagerie par retournement temporel"
         if show:
-            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return background, X, Y
 
 
-    def KM_Imaging(self, show=True):
+    def KM_Imaging(self, show=True, save=None):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X, "complex")
@@ -118,7 +117,7 @@ class Configuration(object):
             us_tilda_hat = [np.zeros_like(X, "complex") for s in range(self.N)]
             for s in range(self.N):
                 for r in range(self.N):
-                    us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, o])
+                    us_tilda_hat[s] = us_tilda_hat[s] + G[r]*np.ma.conjugate(self.dataset[r, s, 0])
 
             # print("Computing the result")
             for s in range(self.N):
@@ -129,11 +128,11 @@ class Configuration(object):
         im = (255*im).astype("uint8")
         message = "Imagerie KM"
         if show:
-            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return background, X, Y
 
 
-    def MUSIC_Imaging(self, show=True):
+    def MUSIC_Imaging(self, show=True, save=None):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X, "complex")
@@ -151,18 +150,18 @@ class Configuration(object):
                         g_hat_x[s] = G0_hat(omega, (sx, sy), (x, y))
 
                     background[i, j] += np.abs(np.dot(g_hat_x, v1))**2
-        
+
         background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
         im = (255*im).astype("uint8")
         message = "Imagerie MUSIC"
         if show:
-            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return background, X, Y
 
 
-    def theoretical_Imaging(self, omega, show=True):
+    def theoretical_Imaging(self, omega, show=True, save=None):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         im = np.sqrt((X - self.reflector_pos[0])**2 + (Y - self.reflector_pos[1])**2)
         im = J0(omega*im)**2
@@ -170,9 +169,9 @@ class Configuration(object):
         if show:
             message = "Theoretical imaging"
             im = (255*im).astype("uint8")
-            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return im
-    
+
     def theoretical_Imaging_part3(self, omega, show=True):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
@@ -207,13 +206,14 @@ class Configuration(object):
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
         return background, X, Y       
     
+
     def theo_func_part3_x(self, omega, show=True) :
         X, Y = create_mesh(self.representation_size, self.precision_step)
         reflector_pos = self.reflector_pos
         reflector_dist = dist(reflector_pos, (0,0))
         x = [(X[0,j], reflector_pos[1]) for j in range(X.shape[1])]
         rc = (2*math.pi/omega) * (reflector_dist / (2*self.R0))
-        dist_to_reflector =  np.array([abs(y[0]- reflector_pos[0]) for y in x])  # notice that they have the same first coord 
+        dist_to_reflector =  np.array([abs(y[0]- reflector_pos[0]) for y in x])  # notice that they have the same first coord
         func = np.sinc(math.pi*dist_to_reflector/ rc)**2
         if show:
             plt.plot(func)
@@ -224,7 +224,7 @@ class Configuration(object):
         reflector_dist = dist(reflector_pos, (0,0))
         rc = (2*math.pi/omega) * (reflector_dist / (2*self.R0))
         return rc  # this is the width of the spot
-    
+
     def exp_spot_part3_x(self, omega, background, X, Y):
         i, j = np.unravel_index(background.argmax(), background.shape)
         x, y = (X[i, j], Y[i, j])
@@ -239,13 +239,13 @@ class Configuration(object):
             else :
                 min_ind = k
                 break
-        try : 
+        try :
             x_min = X[i,min_ind]
         except :
             x_min = X[i, j-1]
         return abs(x-x_min)
-            
-    
+
+
     def get_estimated_reflector(self, background, X, Y):
         x, y = np.unravel_index(background.argmax(), background.shape)
         x, y = (X[x, y], Y[x, y])
@@ -264,11 +264,15 @@ if __name__=="__main__":
     '''
     omega = 0.05*2*np.pi
     B = 0.*omega
-    conf = Configuration(N=20, R0=100., reflector_pos=(20, 20), omega=omega, B=B, n_freq=1, config="circular", representation_size=110., precision_step=1, noise_level=0.0001)
-    # conf.theoretical_Imaging(omega)
+    conf = Configuration(N=30, R0=100., reflector_pos=(0, 50), omega=omega, B=B, n_freq=1, config="linear", representation_size=110., precision_step=2, noise_level=0.00000005)
+    # conf.theoretical_Imaging(omega, save="data/theoretical_base.png")
     conf.generate_dataset()
     bg, X, Y = conf.RT_Imaging(show=True)
     print(conf.get_estimation_error(bg, X, Y))
+    bg, X, Y = conf.RT_Imaging(show=True, save="data\RT_linear_y100.png")
+    bg, X, Y = conf.KM_Imaging(show=True, save="data\KM_linear_y100.png")
+    bg, X, Y = conf.MUSIC_Imaging(show=True, save="data\MUSIC_linear_y100.png")
+    # print(conf.get_estimation_error(bg, X, Y)) 
     '''
     ## theoretical imaging part3
     if False :
@@ -278,3 +282,4 @@ if __name__=="__main__":
     if True :
         conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.05*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
         conf.theoretical_Imaging_part4(0.5*2*np.pi)
+

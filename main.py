@@ -32,7 +32,7 @@ def part3(spot_x_direction=True, vary_omega = True, vary_ratio_xref_R0 = False):
                 spot_width_exp = conf.exp_spot_part3_x(o*2*np.pi, background, X, Y)
                 L_theo.append(spot_width_theo)
                 L_exp.append(spot_width_exp)
-            error_w = [] 
+            error_w = []
             for it in range(len(L_theo)):
                 error_w.append(abs(L_theo[it]-L_exp[it]) )
             plt.figure()
@@ -67,7 +67,7 @@ def part3(spot_x_direction=True, vary_omega = True, vary_ratio_xref_R0 = False):
             plt.title('plot of the absolute error on the width of the spot when w=2*pi while varying the ratio')
             plt.show()
     # TODO z_direction
-                
+
 def part4():
     conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.05*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
     conf.theoretical_Imaging(0.05*2*np.pi)
@@ -130,6 +130,7 @@ def compute_stats(mode = "circular", var="distance"):
                     f.write("%i, %.6f, %.1f, %.1f, %.1f\n"%(N, noise_level, err_RT, err_KM, err_MUSIC))
         elif var=="N":
             for N in range(5, 100):
+                noise_level=0.000
                 conf = Configuration(N=N, R0=R0, reflector_pos=reflector_pos, omega=omega, B=B, n_freq=n_freq, config="circular", representation_size=110., precision_step=1, noise_level=noise_level)
                 conf.generate_dataset()
                 bg, X, Y = conf.RT_Imaging(show=False)
@@ -139,7 +140,7 @@ def compute_stats(mode = "circular", var="distance"):
                 bg, X, Y = conf.MUSIC_Imaging(show=False)
                 err_MUSIC = conf.get_estimation_error(bg, X, Y)
                 with open(file_name, "a") as f:
-                    f.write("%i, %.6f, %.1f, %.1f, %.1f\n"%(N, err_RT, err_KM, err_MUSIC))
+                    f.write("%i, %.6f, %.1f, %.1f, %.1f\n"%(N, noise_level, err_RT, err_KM, err_MUSIC))
         elif var=="n_freq":
             B = 0.1*omega
             noise_level=0.001
@@ -174,8 +175,4 @@ if __name__=="__main__":
     # print("Launching Part5")
     # part5()
 
-    #compute_stats(mode="circular", var="distance")
-'''
-
-
-
+    compute_stats(mode="circular", var="N")
