@@ -20,7 +20,7 @@ def create_linear_transducers(N, R0):
     return pos
 
 
-def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, n_pixels=524, limits=5, message = "configuration"):
+def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, n_pixels=524, limits=5, message = "configuration", save = None):
     """
     Plots the configuration. All arguments are optional, the function will plot all given arguments on the same figure
     inputs :
@@ -50,6 +50,8 @@ def plot_config(transducer_pos=None, reflector_pos=None, pressure=None, n_pixels
 
     if background.shape[0]<500:
         background = cv2.resize(background, (500,500))
+    if save is not None:
+        cv2.imwrite(save, background)
     cv2.imshow(message, background)
     cv2.waitKey(0)
 

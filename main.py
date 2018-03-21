@@ -80,6 +80,7 @@ def compute_stats(mode = "circular", var="distance"):
                     f.write("%i, %.6f, %.1f, %.1f, %.1f\n"%(N, noise_level, err_RT, err_KM, err_MUSIC))
         elif var=="N":
             for N in range(5, 100):
+                noise_level=0.000
                 conf = Configuration(N=N, R0=R0, reflector_pos=reflector_pos, omega=omega, B=B, n_freq=n_freq, config="circular", representation_size=110., precision_step=1, noise_level=noise_level)
                 conf.generate_dataset()
                 bg, X, Y = conf.RT_Imaging(show=False)
@@ -89,7 +90,7 @@ def compute_stats(mode = "circular", var="distance"):
                 bg, X, Y = conf.MUSIC_Imaging(show=False)
                 err_MUSIC = conf.get_estimation_error(bg, X, Y)
                 with open(file_name, "a") as f:
-                    f.write("%i, %.6f, %.1f, %.1f, %.1f\n"%(N, err_RT, err_KM, err_MUSIC))
+                    f.write("%i, %.6f, %.1f, %.1f, %.1f\n"%(N, noise_level, err_RT, err_KM, err_MUSIC))
         elif var=="n_freq":
             B = 0.1*omega
             noise_level=0.001
@@ -124,4 +125,4 @@ if __name__=="__main__":
     # print("Launching Part5")
     # part5()
 
-    compute_stats(mode="circular", var="distance")
+    compute_stats(mode="circular", var="N")
