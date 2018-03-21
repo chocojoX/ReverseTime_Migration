@@ -188,7 +188,7 @@ class Configuration(object):
 
 
 if __name__=="__main__":
-    omega = 0.2*2*np.pi
+    omega = 0.05*2*np.pi
     B = 0.*omega
     conf = Configuration(N=30, R0=100., reflector_pos=(0, 50), omega=omega, B=B, n_freq=1, config="linear", representation_size=110., precision_step=2, noise_level=0.00000005)
     # conf.theoretical_Imaging(omega, save="data/theoretical_base.png")
