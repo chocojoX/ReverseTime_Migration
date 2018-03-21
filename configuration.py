@@ -189,7 +189,23 @@ class Configuration(object):
         if show:
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
         return background, X, Y
-        
+ 
+    def theoretical_Imaging_part4(self, omega, show=True):
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        self.n_pixels = X.shape[0]
+        background = np.zeros_like(X)
+        for i in range(self.n_pixels):
+            for j in range(self.n_pixels):
+                x, y = (X[i, j], Y[i, j])
+                background[i,j] = theoretical_2D_func_part4((x,y), omega, self.reflector_pos, self.R0, self.B)
+        background = self.filter_imaging(background, X, Y)
+        im = np.abs(background)
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        im = (255*im).astype("uint8")
+        message = "Imagerie theorique"
+        if show:
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return background, X, Y       
     
     def theo_func_part3_x(self, omega, show=True) :
         X, Y = create_mesh(self.representation_size, self.precision_step)
@@ -255,5 +271,10 @@ if __name__=="__main__":
     print(conf.get_estimation_error(bg, X, Y))
     '''
     ## theoretical imaging part3
-    conf = Configuration(N=100, R0=50., reflector_pos=(10,20), omega=0.05*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
-    conf.theoretical_Imaging_part3(0.05*2*np.pi)
+    if False :
+        conf = Configuration(N=100, R0=100., reflector_pos=(0,100), omega=0.05*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
+        conf.theoretical_Imaging_part3(0.5*2*np.pi)
+    ## theoretical imaging part3    
+    if True :
+        conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.05*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
+        conf.theoretical_Imaging_part4(0.5*2*np.pi)
