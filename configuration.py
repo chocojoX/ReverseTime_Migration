@@ -280,6 +280,6 @@ if __name__=="__main__":
         conf.theoretical_Imaging_part3(0.5*2*np.pi)
     ## theoretical imaging part3    
     if True :
-        conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.05*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
-        conf.theoretical_Imaging_part4(0.5*2*np.pi)
+        conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.1*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
+        conf.theoretical_Imaging_part4(0.05*2*np.pi)
 
