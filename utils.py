@@ -125,19 +125,19 @@ def theoretical_func_x_part3(x, omega, reflector_pos, R0):
 def theoretical_func_z_part3(x, omega, reflector_pos, R0):
     reflector_dist = dist(reflector_pos, (0,0))
     rl = 2*(2*np.pi/omega)*(reflector_dist/(2*R0))**2
-    result = integrate.quad(lambda s: np.exp(-1j*(np.pi/2)*(s**2)*abs(x[1]-reflector_pos[1])/rl), 0, 1)
+    result = integrate.quad(lambda s: np.exp(-1j*(np.pi/2)*(s**2)*np.abs(x[1]-reflector_pos[1])/rl), 0, 1)
     result = result[0]+ 1j*result[1]
     return np.abs(result)**2
 
 def theoretical_2D_func_part3(x, omega, reflector_pos, R0):
     result = theoretical_func_z_part3(x, omega, reflector_pos, R0) * theoretical_func_x_part3(x, omega, reflector_pos, R0)
-    return result 
+    return result
 
 def theoretical_func_x_part4(x, omega, reflector_pos, R0):
     return theoretical_func_x_part3(x, omega, reflector_pos, R0)
 
 
-    
+
 if __name__=="__main__":
     ## This part is for testing only
     H0(3)

@@ -172,7 +172,7 @@ class Configuration(object):
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return im
 
-    def theoretical_Imaging_part3(self, omega, show=True):
+    def theoretical_Imaging_part3(self, omega, show=True, save=None):
         X, Y = create_mesh(self.representation_size, self.precision_step)
         self.n_pixels = X.shape[0]
         background = np.zeros_like(X)
@@ -186,7 +186,7 @@ class Configuration(object):
         im = (255*im).astype("uint8")
         message = "Imagerie theorique"
         if show:
-            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return background, X, Y
 
 
@@ -202,11 +202,13 @@ class Configuration(object):
             plt.plot(func)
         return func
 
+
     def theo_spot_part3_x(self, omega):
         reflector_pos = self.reflector_pos
         reflector_dist = dist(reflector_pos, (0,0))
         rc = (2*math.pi/omega) * (reflector_dist / (2*self.R0))
         return rc  # this is the width of the spot
+
 
     def exp_spot_part3_x(self, omega, background, X, Y):
         i, j = np.unravel_index(background.argmax(), background.shape)
@@ -246,10 +248,11 @@ class Configuration(object):
 if __name__=="__main__":
     omega = 0.05*2*np.pi
     B = 0.*omega
-    conf = Configuration(N=30, R0=100., reflector_pos=(0, 50), omega=omega, B=B, n_freq=1, config="linear", representation_size=110., precision_step=2, noise_level=0.00000005)
-    # conf.theoretical_Imaging(omega, save="data/theoretical_base.png")
+    conf = Configuration(N=100, R0=100., reflector_pos=(10, 20), omega=omega, B=B, n_freq=1, config="circular", representation_size=110., precision_step=1, noise_level=0.)
+    conf.theoretical_Imaging(omega, save="data/theoretical_base.png")
+    # conf.theoretical_Imaging_part3(omega=0.05, save="data\\theoretical_linear.png")
     conf.generate_dataset()
-    bg, X, Y = conf.RT_Imaging(show=True, save="data\RT_linear_y100.png")
-    bg, X, Y = conf.KM_Imaging(show=True, save="data\KM_linear_y100.png")
-    bg, X, Y = conf.MUSIC_Imaging(show=True, save="data\MUSIC_linear_y100.png")
+    bg, X, Y = conf.RT_Imaging(show=True, save="data\RT_linear_10freq.png")
+    bg, X, Y = conf.KM_Imaging(show=True, save="data\KM_linear_10freq.png")
+    bg, X, Y = conf.MUSIC_Imaging(show=True, save="data\MUSIC_linear_10freq.png")
     # print(conf.get_estimation_error(bg, X, Y))
