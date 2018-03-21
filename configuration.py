@@ -90,7 +90,6 @@ class Configuration(object):
             # print("Computing the result")
             for s in range(self.N):
                 background = background + us_tilda_hat[s] * G[s]
-        background_complex = background
         background = self.filter_imaging(background, X, Y)
         im = np.abs(background)
         im = (im-im.min())/(im.max()-im.min()+0.0000001)
@@ -98,7 +97,7 @@ class Configuration(object):
         message = "Imagerie par retournement temporel"
         if show:
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
-        return background, X, Y, background_complex
+        return background, X, Y
 
 
     def KM_Imaging(self, show=True):
@@ -174,12 +173,30 @@ class Configuration(object):
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
         return im
     
+    def theoretical_Imaging_part3(self, omega, show=True):
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        self.n_pixels = X.shape[0]
+        background = np.zeros_like(X)
+        for i in range(self.n_pixels):
+            for j in range(self.n_pixels):
+                x, y = (X[i, j], Y[i, j])
+                background[i,j] = theoretical_2D_func_part3((x,y), omega, self.reflector_pos, self.R0)
+        background = self.filter_imaging(background, X, Y)
+        im = np.abs(background)
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        im = (255*im).astype("uint8")
+        message = "Imagerie theorique"
+        if show:
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return background, X, Y
+        
+    
     def theo_func_part3_x(self, omega, show=True) :
         X, Y = create_mesh(self.representation_size, self.precision_step)
         reflector_pos = self.reflector_pos
-        reflector_dist = math.sqrt(reflector_pos[0]**2 + reflector_pos[1]**2)
+        reflector_dist = dist(reflector_pos, (0,0))
         x = [(X[0,j], reflector_pos[1]) for j in range(X.shape[1])]
-        rc = (2*math.pi/omega) * (reflector_dist / self.R0)
+        rc = (2*math.pi/omega) * (reflector_dist / (2*self.R0))
         dist_to_reflector =  np.array([abs(y[0]- reflector_pos[0]) for y in x])  # notice that they have the same first coord 
         func = np.sinc(math.pi*dist_to_reflector/ rc)**2
         if show:
@@ -188,8 +205,8 @@ class Configuration(object):
 
     def theo_spot_part3_x(self, omega):
         reflector_pos = self.reflector_pos
-        reflector_dist = math.sqrt(reflector_pos[0]**2 + reflector_pos[1]**2)
-        rc = (2*math.pi/omega) * (reflector_dist / self.R0)
+        reflector_dist = dist(reflector_pos, (0,0))
+        rc = (2*math.pi/omega) * (reflector_dist / (2*self.R0))
         return rc  # this is the width of the spot
     
     def exp_spot_part3_x(self, omega, background, X, Y):
@@ -228,6 +245,7 @@ class Configuration(object):
 
 
 if __name__=="__main__":
+    '''
     omega = 0.05*2*np.pi
     B = 0.*omega
     conf = Configuration(N=20, R0=100., reflector_pos=(20, 20), omega=omega, B=B, n_freq=1, config="circular", representation_size=110., precision_step=1, noise_level=0.0001)
@@ -235,3 +253,7 @@ if __name__=="__main__":
     conf.generate_dataset()
     bg, X, Y = conf.RT_Imaging(show=True)
     print(conf.get_estimation_error(bg, X, Y))
+    '''
+    ## theoretical imaging part3
+    conf = Configuration(N=100, R0=50., reflector_pos=(10,20), omega=0.05*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
+    conf.theoretical_Imaging_part3(0.05*2*np.pi)

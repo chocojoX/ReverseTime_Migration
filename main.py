@@ -10,12 +10,12 @@ def part2():
     conf.KM_Imaging()
 
 
-def part3(spot_x_direction=True, vary_omega = False, vary_ratio_xref_R0 = True):
-    conf = Configuration(N=100, R0=50., reflector_pos=(0,100), omega=0.05*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
+def part3(spot_x_direction=True, vary_omega = True, vary_ratio_xref_R0 = False):
+    '''conf = Configuration(N=100, R0=25., reflector_pos=(0,100), omega=0.90*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
     conf.generate_dataset()
     conf.RT_Imaging()
     conf.KM_Imaging()
-    conf.MUSIC_Imaging()
+    conf.MUSIC_Imaging()'''
     # TODO Add code for comparing with the theoretical focal spots
     # For this, we'll need to return the predicted field of values and plot 1D curves
     # x_direction
@@ -23,9 +23,9 @@ def part3(spot_x_direction=True, vary_omega = False, vary_ratio_xref_R0 = True):
         if vary_omega :
             L_theo = []
             L_exp = []
-            OMEGAS = [j/float(100) for j in range(5,100,5)]
+            OMEGA = [j/float(100) for j in range(5,105,5)]
             for o in OMEGA:
-                conf = Configuration(N=100, R0=50., reflector_pos=(0,100), omega=o*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
+                conf = Configuration(N=100, R0=25., reflector_pos=(0,100), omega=o*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
                 conf.generate_dataset()
                 background, X, Y = conf.KM_Imaging(False)
                 spot_width_theo = conf.theo_spot_part3_x(o*2*np.pi)
@@ -40,6 +40,7 @@ def part3(spot_x_direction=True, vary_omega = False, vary_ratio_xref_R0 = True):
             plt.xlabel('Omega (2*pi scale)')
             plt.ylabel('error on the width of the focal spot')
             plt.title('plot of the absolute error on the width of the spot when xref=(0,100) while varying omega')
+            plt.show()
         if vary_ratio_xref_R0 :
             L_theo = []
             L_exp = []
@@ -159,7 +160,7 @@ def compute_stats(mode = "circular", var="distance"):
 
 
 
-
+'''
 if __name__=="__main__":
     # print("Launching Part2")
     # part2()
@@ -174,4 +175,7 @@ if __name__=="__main__":
     # part5()
 
     #compute_stats(mode="circular", var="distance")
+'''
+
+
 
