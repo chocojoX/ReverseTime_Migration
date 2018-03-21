@@ -136,8 +136,18 @@ def theoretical_2D_func_part3(x, omega, reflector_pos, R0):
 def theoretical_func_x_part4(x, omega, reflector_pos, R0):
     return theoretical_func_x_part3(x, omega, reflector_pos, R0)
 
+def theoretical_func_z_part4(x, reflector_pos, R0, B):
+    result = abs(J0(2*B*abs(x[1]-reflector_pos[1])))
+    return result
 
+<<<<<<< HEAD
 
+=======
+def theoretical_2D_func_part4(x, omega, reflector_pos, R0, B):
+    result = theoretical_func_z_part4(x, reflector_pos, R0, B) * theoretical_func_x_part4(x, omega, reflector_pos, R0)
+    return result 
+    
+>>>>>>> 76e8caa82def9703efa2dc46f1de259bfdb09c30
 if __name__=="__main__":
     ## This part is for testing only
     H0(3)

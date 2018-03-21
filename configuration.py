@@ -189,6 +189,23 @@ class Configuration(object):
             plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message, save=save)
         return background, X, Y
 
+    def theoretical_Imaging_part4(self, omega, show=True):
+        X, Y = create_mesh(self.representation_size, self.precision_step)
+        self.n_pixels = X.shape[0]
+        background = np.zeros_like(X)
+        for i in range(self.n_pixels):
+            for j in range(self.n_pixels):
+                x, y = (X[i, j], Y[i, j])
+                background[i,j] = theoretical_2D_func_part4((x,y), omega, self.reflector_pos, self.R0, self.B)
+        background = self.filter_imaging(background, X, Y)
+        im = np.abs(background)
+        im = (im-im.min())/(im.max()-im.min()+0.0000001)
+        im = (255*im).astype("uint8")
+        message = "Imagerie theorique"
+        if show:
+            plot_config(transducer_pos=self.transducer_pos, reflector_pos=[self.reflector_pos], pressure=im, n_pixels=self.n_pixels, limits=self.representation_size, message=message)
+        return background, X, Y
+
 
     def theo_func_part3_x(self, omega, show=True) :
         X, Y = create_mesh(self.representation_size, self.precision_step)
@@ -246,13 +263,25 @@ class Configuration(object):
 
 
 if __name__=="__main__":
+    '''
     omega = 0.05*2*np.pi
     B = 0.*omega
     conf = Configuration(N=100, R0=100., reflector_pos=(10, 20), omega=omega, B=B, n_freq=1, config="circular", representation_size=110., precision_step=1, noise_level=0.)
     conf.theoretical_Imaging(omega, save="data/theoretical_base.png")
     # conf.theoretical_Imaging_part3(omega=0.05, save="data\\theoretical_linear.png")
     conf.generate_dataset()
-    bg, X, Y = conf.RT_Imaging(show=True, save="data\RT_linear_10freq.png")
-    bg, X, Y = conf.KM_Imaging(show=True, save="data\KM_linear_10freq.png")
-    bg, X, Y = conf.MUSIC_Imaging(show=True, save="data\MUSIC_linear_10freq.png")
+    bg, X, Y = conf.RT_Imaging(show=True)
+    print(conf.get_estimation_error(bg, X, Y))
+    bg, X, Y = conf.RT_Imaging(show=True, save="data\RT_linear_y100.png")
+    bg, X, Y = conf.KM_Imaging(show=True, save="data\KM_linear_y100.png")
+    bg, X, Y = conf.MUSIC_Imaging(show=True, save="data\MUSIC_linear_y100.png")
     # print(conf.get_estimation_error(bg, X, Y))
+    '''
+    ## theoretical imaging part3
+    if False :
+        conf = Configuration(N=100, R0=100., reflector_pos=(0,100), omega=0.05*2*np.pi, B=0, n_freq=1, config="linear", representation_size=110., precision_step=1)
+        conf.theoretical_Imaging_part3(0.5*2*np.pi)
+    ## theoretical imaging part3
+    if True :
+        conf = Configuration(N=25, R0=100., reflector_pos=(10, 100), omega=0.1*2*np.pi, B=0.05, n_freq=10, config="linear", representation_size=105., precision_step=1)
+        conf.theoretical_Imaging_part4(0.05*2*np.pi)
